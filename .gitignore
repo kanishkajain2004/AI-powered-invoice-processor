@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment and secrets (only the documented example is committed)
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Local data: databases, uploads and backups never go into the repository
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+data/uploads/*
+!data/uploads/.gitkeep
+data/demo_uploads/
+data/backups/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

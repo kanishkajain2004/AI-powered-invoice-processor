@@ -1,0 +1,44 @@
+# Render Blueprint: two web services built from this repository.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# The UI calls the API from its server (not from the browser), so it needs the API's URL in
+# API_BASE_URL. Render asks for that value when the Blueprint is created, because it is
+# marked `sync: false`. Use the API's public URL, e.g. https://zamp-invoice-api.onrender.com.
+#
+# STORAGE: on the free plan the filesystem is ephemeral. The SQLite database and uploaded
+# PDFs are wiped on every deploy, restart and spin-down; SEED_ON_STARTUP recreates the
+# purchase orders each time. For persistent history, use a paid plan, uncomment the `disk`
+# block and set DATA_DIR to its mount path. Keep the API at a single instance (SQLite).
+
+services:
+  - type: web
+    name: zamp-invoice-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: sh scripts/start_api.sh
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: SEED_ON_STARTUP
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: MAX_UPLOAD_MB
+        value: "20"
+      # - key: DATA_DIR            # with the disk below (paid plans only)
+      #   value: /var/data
+    # disk:
+    #   name: invoice-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
+
+  - type: web
+    name: zamp-invoice-ui
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: sh scripts/start_ui.sh
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: API_BASE_URL
+        sync: false

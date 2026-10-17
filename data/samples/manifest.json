@@ -1,0 +1,67 @@
+[
+  {
+    "order": 1,
+    "file": "01_happy_path_INV-1001.pdf",
+    "scenario": "Happy path: Acme INV-1001 against PO-5001 for INR 50,000.00.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "APPROVED",
+      "deciding_checks": []
+    }
+  },
+  {
+    "order": 2,
+    "file": "02_duplicate_resend_INV-1001.pdf",
+    "scenario": "Duplicate: the vendor re-sends INV-1001 as a copy (different file, same vendor and number). Must be processed after 01.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "REJECTED",
+      "deciding_checks": [
+        "duplicate_invoice"
+      ],
+      "duplicate_of": "01_happy_path_INV-1001.pdf"
+    }
+  },
+  {
+    "order": 3,
+    "file": "03_amount_mismatch_INV-1002.pdf",
+    "scenario": "Amount mismatch: Acme INV-1002 for INR 55,000.00 against PO-5001 (INR 50,000.00); 10% over the 1% tolerance.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "NEEDS_REVIEW",
+      "deciding_checks": [
+        "amount_within_tolerance"
+      ]
+    }
+  },
+  {
+    "order": 4,
+    "file": "04_missing_invoice_number_PO-5002.pdf",
+    "scenario": "Missing field: Bluewave invoice against PO-5002 for INR 1,20,000.00 with the Bill No. left blank, so it cannot be identified or checked for duplicates.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "NEEDS_REVIEW",
+      "deciding_checks": [
+        "required_fields",
+        "duplicate_invoice"
+      ]
+    }
+  },
+  {
+    "order": 5,
+    "file": "05_scanned_INV-1003.pdf",
+    "scenario": "Scanned invoice: Acme INV-1003 against PO-5004 for INR 80,000.00, as an image-only PDF.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "APPROVED",
+      "deciding_checks": []
+    },
+    "expected_without_ocr": {
+      "status": "FAILED",
+      "decision": null,
+      "error_code": "ocr_unavailable",
+      "failed_stage": "EXTRACTION",
+      "http_status": 503
+    }
+  }
+]

@@ -1,0 +1,88 @@
+[
+  {
+    "order": 1,
+    "file": "06_within_tolerance_INV-2001.pdf",
+    "scenario": "Acme INV-2001 for INR 50,400.00 against PO-5001 (INR 50,000.00): 0.8% over, inside the 1% tolerance.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "APPROVED",
+      "deciding_checks": []
+    }
+  },
+  {
+    "order": 2,
+    "file": "07_closed_po_NS-2026-118.pdf",
+    "scenario": "Northstar NS-2026-118 for INR 75,000.00 against PO-5003, which is CLOSED.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "NEEDS_REVIEW",
+      "deciding_checks": [
+        "po_status"
+      ]
+    }
+  },
+  {
+    "order": 3,
+    "file": "08_vendor_mismatch_BW-2026-0611.pdf",
+    "scenario": "Bluewave BW/2026/0611 quotes PO-5001, which was raised for Acme Office Supplies.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "NEEDS_REVIEW",
+      "deciding_checks": [
+        "vendor_match"
+      ]
+    }
+  },
+  {
+    "order": 4,
+    "file": "09_unknown_po_INV-2002.pdf",
+    "scenario": "Acme INV-2002 quotes PO-9999, which does not exist; every PO-dependent check cannot run.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "NEEDS_REVIEW",
+      "deciding_checks": [
+        "po_match",
+        "po_status",
+        "vendor_match",
+        "currency_match",
+        "amount_within_tolerance"
+      ]
+    }
+  },
+  {
+    "order": 5,
+    "file": "10_currency_mismatch_INV-2003.pdf",
+    "scenario": "Acme INV-2003 billed in USD 960.00 against PO-5004, which is in INR; the amounts cannot be compared.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "NEEDS_REVIEW",
+      "deciding_checks": [
+        "currency_match",
+        "amount_within_tolerance"
+      ]
+    }
+  },
+  {
+    "order": 6,
+    "file": "11_arithmetic_error_INV-2004.pdf",
+    "scenario": "Acme INV-2004 against PO-5004: the IGST line is misprinted (12,000.00 instead of 12,203.39), so subtotal + tax does not equal the total.",
+    "expected": {
+      "status": "COMPLETED",
+      "decision": "NEEDS_REVIEW",
+      "deciding_checks": [
+        "totals_arithmetic"
+      ]
+    }
+  },
+  {
+    "order": 7,
+    "file": "12_not_a_pdf.pdf",
+    "scenario": "An email saved with a .pdf extension. It is rejected before processing; no run is created.",
+    "expected": {
+      "status": null,
+      "decision": null,
+      "error_code": "invalid_pdf",
+      "http_status": 422
+    }
+  }
+]

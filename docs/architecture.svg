@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Invoice processing — architecture</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#256abf"/>
+    </marker>
+    <marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6b7a90"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0b0b0b" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="1920" height="1080" fill="#f9f9f7"/>
+
+  <!-- title -->
+  <text x="61" y="84" font-size="40" font-weight="700" fill="#0b0b0b">Invoice processing — architecture</text>
+  <text x="61" y="124" font-size="22" fill="#52514e">Upload a PDF → nine recorded stages → a deterministic decision, with the evidence behind it</text>
+
+  <!-- ===== Row 1: user, UI, API ===== -->
+  <!-- AP team -->
+  <g filter="url(#shadow)">
+    <rect x="61" y="160" width="270" height="150" rx="14" fill="#ffffff" stroke="#d9d8d2"/>
+  </g>
+  <circle cx="103" cy="207" r="12" fill="#256abf"/>
+  <path d="M83,240 a20,18 0 0 1 40,0 v4 h-40 z" fill="#256abf"/>
+  <text x="140" y="217" font-size="22" font-weight="700" fill="#0b0b0b">AP team</text>
+  <text x="85" y="272" font-size="17" fill="#52514e">uploads invoice PDFs,</text>
+  <text x="85" y="295" font-size="17" fill="#52514e">reviews the decisions</text>
+
+  <!-- Streamlit UI -->
+  <g filter="url(#shadow)">
+    <rect x="421" y="160" width="480" height="150" rx="14" fill="#ffffff" stroke="#d9d8d2"/>
+  </g>
+  <rect x="445" y="186" width="40" height="30" rx="4" fill="none" stroke="#256abf" stroke-width="2.5"/>
+  <line x1="445" y1="194" x2="485" y2="194" stroke="#256abf" stroke-width="2.5"/>
+  <text x="499" y="210" font-size="22" font-weight="700" fill="#0b0b0b">Streamlit UI <tspan font-size="17" font-weight="400" fill="#898781">localhost:8501</tspan></text>
+  <g font-size="15" font-weight="600" fill="#0b0b0b">
+    <rect x="445" y="232" width="168" height="32" rx="16" fill="#eef3fa" stroke="#9ec5f4"/>
+    <text x="529" y="253" text-anchor="middle">Invoice processing</text>
+    <rect x="623" y="232" width="118" height="32" rx="16" fill="#eef3fa" stroke="#9ec5f4"/>
+    <text x="682" y="253" text-anchor="middle">Run details</text>
+    <rect x="751" y="232" width="118" height="32" rx="16" fill="#eef3fa" stroke="#9ec5f4"/>
+    <text x="810" y="253" text-anchor="middle">Dashboard</text>
+  </g>
+  <text x="445" y="292" font-size="17" fill="#52514e">displays results only · holds no business rules</text>
+
+  <!-- FastAPI -->
+  <g filter="url(#shadow)">
+    <rect x="991" y="160" width="868" height="150" rx="14" fill="#ffffff" stroke="#d9d8d2"/>
+  </g>
+  <text x="1013" y="214" font-size="30" font-weight="700" fill="#256abf">{ }</text>
+  <text x="1063" y="210" font-size="22" font-weight="700" fill="#0b0b0b">FastAPI  /api/v1 <tspan font-size="17" font-weight="400" fill="#898781">localhost:8000</tspan></text>
+  <text x="1015" y="254" font-size="17" fill="#0b0b0b"><tspan font-weight="700">POST</tspan> /invoices/process <tspan fill="#52514e">→ checks size, PDF type, readability, safe file name</tspan></text>
+  <text x="1015" y="290" font-size="17" fill="#0b0b0b"><tspan font-weight="700">GET</tspan> /runs · /runs/{id} · /runs/{id}/result · /runs/stats <tspan fill="#52514e">→ history, dashboard</tspan></text>
+
+  <!-- row 1 arrows -->
+  <line x1="333" y1="235" x2="417" y2="235" stroke="#256abf" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="905" y1="235" x2="987" y2="235" stroke="#256abf" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text x="946" y="222" font-size="15" font-weight="600" fill="#256abf" text-anchor="middle">HTTP</text>
+
+  <!-- API -> orchestrator -->
+  <line x1="1425" y1="312" x2="1425" y2="346" stroke="#256abf" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="1443" y="336" font-size="15" font-weight="600" fill="#256abf">each upload starts a run</text>
+
+  <!-- ===== Row 2: workflow orchestrator ===== -->
+  <rect x="61" y="350" width="1798" height="210" rx="16" fill="#eef1f6" stroke="#c9d3e3"/>
+  <text x="85" y="385" font-size="20" font-weight="700" fill="#0b0b0b">Workflow orchestrator <tspan font-size="17" font-weight="400" fill="#52514e">— one run per upload · every stage timestamped · ends COMPLETED or FAILED</tspan></text>
+
+  <g font-size="15" fill="#52514e">
+    <!-- chip 1 -->
+    <rect x="81" y="400" width="182" height="140" rx="12" fill="#ffffff" stroke="#b7c6dc"/>
+    <text x="97" y="438" font-size="18" font-weight="700" fill="#0b0b0b"><tspan fill="#256abf">1</tspan>  Received</text>
+    <text x="97" y="500">SHA-256 fingerprint</text>
+    <text x="97" y="522">file saved by run ID</text>
+    <!-- chip 2 -->
+    <rect x="278" y="400" width="182" height="140" rx="12" fill="#ffffff" stroke="#b7c6dc"/>
+    <text x="294" y="438" font-size="18" font-weight="700" fill="#0b0b0b"><tspan fill="#256abf">2</tspan>  Extraction</text>
+    <text x="294" y="500">PyMuPDF text layer</text>
+    <text x="294" y="522">Tesseract OCR scans</text>
+    <!-- chip 3 -->
+    <rect x="475" y="400" width="182" height="140" rx="12" fill="#ffffff" stroke="#b7c6dc"/>
+    <text x="491" y="438" font-size="18" font-weight="700" fill="#0b0b0b"><tspan fill="#256abf">3</tspan>  Normalization</text>
+    <text x="491" y="500">references, vendors</text>
+    <text x="491" y="522">money as exact ₹</text>
+    <!-- chip 4 -->
+    <rect x="672" y="400" width="182" height="140" rx="12" fill="#ffffff" stroke="#b7c6dc"/>
+    <text x="688" y="438" font-size="18" font-weight="700" fill="#0b0b0b"><tspan fill="#256abf">4</tspan>  Required</text>
+    <text x="707" y="460" font-size="18" font-weight="700" fill="#0b0b0b">fields</text>
+    <text x="688" y="500">vendor, number, date</text>
+    <text x="688" y="522">PO, currency, total</text>
+    <!-- chip 5 -->
+    <rect x="869" y="400" width="182" height="140" rx="12" fill="#ffffff" stroke="#b7c6dc"/>
+    <text x="885" y="438" font-size="18" font-weight="700" fill="#0b0b0b"><tspan fill="#256abf">5</tspan>  Duplicate</text>
+    <text x="904" y="460" font-size="18" font-weight="700" fill="#0b0b0b">check</text>
+    <text x="885" y="500">vendor + invoice no.</text>
+    <text x="885" y="522">same file · similar</text>
+    <!-- chip 6 -->
+    <rect x="1066" y="400" width="182" height="140" rx="12" fill="#ffffff" stroke="#b7c6dc"/>
+    <text x="1082" y="438" font-size="18" font-weight="700" fill="#0b0b0b"><tspan fill="#256abf">6</tspan>  PO matching</text>
+    <text x="1082" y="500">one PO per reference</text>
+    <text x="1082" y="522">never a guess</text>
+    <!-- chip 7 -->
+    <rect x="1263" y="400" width="182" height="140" rx="12" fill="#ffffff" stroke="#b7c6dc"/>
+    <text x="1279" y="438" font-size="18" font-weight="700" fill="#0b0b0b"><tspan fill="#256abf">7</tspan>  Business</text>
+    <text x="1298" y="460" font-size="18" font-weight="700" fill="#0b0b0b">validation</text>
+    <text x="1279" y="500">PO status, vendor,</text>
+    <text x="1279" y="522">currency, ±1%, sums</text>
+    <!-- chip 8 -->
+    <rect x="1460" y="400" width="182" height="140" rx="12" fill="#ffffff" stroke="#256abf" stroke-width="2"/>
+    <text x="1476" y="438" font-size="18" font-weight="700" fill="#0b0b0b"><tspan fill="#256abf">8</tspan>  Decision</text>
+    <text x="1476" y="500">strongest check</text>
+    <text x="1476" y="522">effect wins</text>
+    <!-- chip 9 -->
+    <rect x="1657" y="400" width="182" height="140" rx="12" fill="#ffffff" stroke="#b7c6dc"/>
+    <text x="1673" y="438" font-size="18" font-weight="700" fill="#0b0b0b"><tspan fill="#256abf">9</tspan>  Persistence</text>
+    <text x="1673" y="500">11 checks + evidence</text>
+    <text x="1673" y="522">audit events</text>
+  </g>
+  <!-- chip arrows -->
+  <g stroke="#256abf" stroke-width="2.5" marker-end="url(#arrow)">
+    <line x1="264" y1="470" x2="276" y2="470"/>
+    <line x1="461" y1="470" x2="473" y2="470"/>
+    <line x1="658" y1="470" x2="670" y2="470"/>
+    <line x1="855" y1="470" x2="867" y2="470"/>
+    <line x1="1052" y1="470" x2="1064" y2="470"/>
+    <line x1="1249" y1="470" x2="1261" y2="470"/>
+    <line x1="1446" y1="470" x2="1458" y2="470"/>
+    <line x1="1643" y1="470" x2="1655" y2="470"/>
+  </g>
+
+  <!-- ===== Row 3: database ===== -->
+  <rect x="61" y="610" width="1798" height="92" rx="16" fill="#ffffff" stroke="#9ec5f4" stroke-width="2" filter="url(#shadow)"/>
+  <!-- cylinder icon -->
+  <g fill="#eef3fa" stroke="#256abf" stroke-width="2.5">
+    <path d="M87,632 v38 a19,7 0 0 0 38,0 v-38"/>
+    <ellipse cx="106" cy="632" rx="19" ry="7"/>
+    <path d="M87,651 a19,7 0 0 0 38,0" fill="none"/>
+  </g>
+  <text x="145" y="647" font-size="22" font-weight="700" fill="#0b0b0b">SQLite</text>
+  <text x="145" y="682" font-size="17" fill="#52514e">purchase_orders · processing_runs · run_stages · validation_checks · run_events</text>
+  <text x="1835" y="664" font-size="17" fill="#52514e" text-anchor="end">history survives restarts</text>
+  <!-- reads / writes -->
+  <line x1="960" y1="606" x2="960" y2="544" stroke="#6b7a90" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arrow-muted)"/>
+  <line x1="1157" y1="606" x2="1157" y2="544" stroke="#6b7a90" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arrow-muted)"/>
+  <text x="970" y="588" font-size="15" font-weight="600" fill="#6b7a90">reads earlier runs</text>
+  <text x="1167" y="588" font-size="15" font-weight="600" fill="#6b7a90">reads POs</text>
+  <line x1="1748" y1="544" x2="1748" y2="606" stroke="#256abf" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="1730" y="588" font-size="15" font-weight="600" fill="#256abf" text-anchor="end">writes the run</text>
+
+  <!-- ===== Row 4: decisions + guarantees ===== -->
+  <g filter="url(#shadow)">
+    <rect x="61" y="745" width="880" height="285" rx="16" fill="#ffffff" stroke="#d9d8d2"/>
+    <rect x="981" y="745" width="878" height="285" rx="16" fill="#ffffff" stroke="#d9d8d2"/>
+  </g>
+  <text x="85" y="787" font-size="22" font-weight="700" fill="#0b0b0b">The decision <tspan font-size="17" font-weight="400" fill="#52514e">— priority: REJECTED › NEEDS REVIEW › APPROVED</tspan></text>
+
+  <!-- outcome rows -->
+  <g font-size="16" font-weight="700">
+    <rect x="85" y="810" width="236" height="38" rx="19" fill="#0ca30c" fill-opacity="0.12" stroke="#0ca30c" stroke-opacity="0.5"/>
+    <circle cx="106" cy="829" r="12" fill="#0ca30c"/><text x="106" y="834" text-anchor="middle" fill="#ffffff" font-size="14">✓</text>
+    <text x="127" y="835" fill="#0b0b0b">APPROVED</text>
+
+    <rect x="85" y="862" width="236" height="38" rx="19" fill="#fab219" fill-opacity="0.16" stroke="#fab219" stroke-opacity="0.6"/>
+    <circle cx="106" cy="881" r="12" fill="#fab219"/><text x="106" y="886" text-anchor="middle" fill="#0b0b0b" font-size="14">!</text>
+    <text x="127" y="887" fill="#0b0b0b">NEEDS REVIEW</text>
+
+    <rect x="85" y="914" width="236" height="38" rx="19" fill="#d03b3b" fill-opacity="0.12" stroke="#d03b3b" stroke-opacity="0.5"/>
+    <circle cx="106" cy="933" r="12" fill="#d03b3b"/><text x="106" y="938" text-anchor="middle" fill="#ffffff" font-size="14">✕</text>
+    <text x="127" y="939" fill="#0b0b0b">REJECTED</text>
+
+    <rect x="85" y="966" width="236" height="38" rx="19" fill="#ec835a" fill-opacity="0.14" stroke="#ec835a" stroke-opacity="0.6"/>
+    <circle cx="106" cy="985" r="12" fill="#ec835a"/><text x="106" y="990" text-anchor="middle" fill="#0b0b0b" font-size="14">⚠</text>
+    <text x="127" y="991" fill="#0b0b0b">PROCESSING FAILED</text>
+  </g>
+  <g font-size="17" fill="#52514e">
+    <text x="339" y="835">every mandatory check passed, with evidence</text>
+    <text x="339" y="887">a check failed or could not run → a person decides</text>
+    <text x="339" y="939">confirmed duplicate of an already-approved invoice</text>
+    <text x="339" y="991">unreadable file or OCR unavailable · no decision</text>
+  </g>
+
+  <text x="1005" y="787" font-size="22" font-weight="700" fill="#0b0b0b">Why it can be trusted</text>
+  <g font-size="17" fill="#0b0b0b">
+    <circle cx="1013" cy="829" r="4" fill="#256abf"/><text x="1029" y="835">No LLM makes the decision: same invoice, same answer, every time</text>
+    <circle cx="1013" cy="869" r="4" fill="#256abf"/><text x="1029" y="875">Every check stores its name, status, reason and evidence</text>
+    <circle cx="1013" cy="909" r="4" fill="#256abf"/><text x="1029" y="915">The database allows one approval per vendor + invoice number</text>
+    <circle cx="1013" cy="949" r="4" fill="#256abf"/><text x="1029" y="955">Missing or unclear data goes to a person; nothing is guessed</text>
+    <circle cx="1013" cy="989" r="4" fill="#256abf"/><text x="1029" y="995">Processing failures are kept apart from business rejections</text>
+  </g>
+
+  <!-- footer -->
+  <text x="1859" y="1062" font-size="15" fill="#898781" text-anchor="end">Zamp PS-1 · FastAPI · Streamlit · SQLite · PyMuPDF · Tesseract · runs locally, no AI API key</text>
+</svg>
