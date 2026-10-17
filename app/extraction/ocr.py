@@ -52,6 +52,15 @@ def ensure_ocr_available(pages: list[int]):
     return pytesseract
 
 
+def ocr_status() -> str | None:
+    """The OCR engine description ("tesseract 5.5.3") if scanned pages can be read, else None."""
+    try:
+        engine = ensure_ocr_available([1])
+    except OCRUnavailableError:
+        return None
+    return f"tesseract {engine.get_tesseract_version()}"
+
+
 MAX_OCR_PIXELS = 40_000_000  # ~ an A2 sheet at 300 dpi; bounds memory for oversized pages
 MIN_OCR_DPI = 72
 

@@ -162,24 +162,33 @@ Check them against the live API with `python -m scripts.demo run --samples data/
 
 The repository includes a Render Blueprint, [render.yaml](render.yaml), that defines two web services from the same code:
 
-| Service | Start command | Health check | Key settings |
-|---|---|---|---|
-| `zamp-invoice-api` (FastAPI) | `sh scripts/start_api.sh` | `/api/v1/health` (checks the database too) | `SEED_ON_STARTUP=true` |
-| `zamp-invoice-ui` (Streamlit) | `sh scripts/start_ui.sh` | `/_stcore/health` | `API_BASE_URL` = the API's public URL |
+| Service | Runtime | How it starts | Health check | Key settings |
+|---|---|---|---|---|
+| `zamp-invoice-api` (FastAPI) | **Docker**, built from the [Dockerfile](Dockerfile): Python 3.12 + Tesseract OCR | `sh scripts/start_api.sh` (the image's `CMD`) | `/api/v1/health` | `SEED_ON_STARTUP=true` |
+| `zamp-invoice-ui` (Streamlit) | Python 3.12 (`.python-version`) | `sh scripts/start_ui.sh` | `/_stcore/health` | `API_BASE_URL` = the API's public URL |
 
-Both services bind `0.0.0.0` on the `PORT` Render assigns, install `requirements.txt` and use Python 3.12 (`.python-version`). The UI calls the API from its server, so no CORS setup is needed.
+Both services bind `0.0.0.0` on the `PORT` Render assigns. The UI calls the API from its server, so no CORS setup is needed.
 
-Steps:
-1. Push the repository to GitHub or GitLab.
-2. In Render: **New → Blueprint**, then pick the repository.
-3. When asked for `API_BASE_URL`, enter `https://zamp-invoice-api.onrender.com` (the API's URL, shown on its service page).
+**OCR.** The API image installs `tesseract-ocr` with English language data. PyMuPDF renders scanned pages to images, so no poppler or pdf2image is needed. Scanned PDFs then go through the same normalization, matching and validation as text PDFs. To check that OCR is present on a running deployment, open `/api/v1/health`: it reports `"ocr": "available"` and the Tesseract version. Without Tesseract the health check still returns 200, because text PDFs keep working, and scanned uploads fail clearly with `ocr_unavailable` (HTTP 503).
+
+**First deployment:** push the repository to GitHub, then in Render choose **New → Blueprint** and pick the repository. When asked for `API_BASE_URL`, enter the API's URL, e.g. `https://zamp-invoice-api.onrender.com`.
+
+**Updating an existing deployment:** push to `main`. Render rebuilds both services. If the API service was first created with the Python runtime and Render will not switch it to Docker, delete that one service in the dashboard and sync the Blueprint again; it is recreated under the same name and URL.
+
+**Building and testing the image locally:**
+
+```bash
+docker build -t invoice-api .
+docker run -p 8000:8000 -e SEED_ON_STARTUP=true invoice-api       # then open http://localhost:8000/api/v1/health
+RUN_DOCKER_TESTS=1 pytest tests/test_docker.py -v                  # build the image and test OCR inside it
+```
 
 **Storage.** On Render's free plan the filesystem is temporary. The database and uploads are wiped on every deploy, restart and idle spin-down, and the seed POs are recreated at startup. To keep history:
 - attach a disk to the API service (paid plans; see the commented block in `render.yaml`);
 - set `DATA_DIR` to its mount path, for example `/var/data`;
 - keep the API to **one instance**, because SQLite is single-writer.
 
-**OCR.** Render's Python environment has no Tesseract, so scanned PDFs fail cleanly there (`ocr_unavailable`, HTTP 503). Text PDFs work normally. Enabling OCR in the cloud needs a Docker-based service that installs `tesseract-ocr`.
+**Memory.** OCR at the default `OCR_DPI=300` uses roughly 100–200 MB per page. If the free instance (512 MB) restarts while processing a scan, set `OCR_DPI=200` on the API service.
 
 ## Architecture
 

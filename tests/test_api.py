@@ -1,6 +1,7 @@
 """API integration tests: real app, TestClient, temporary SQLite database per test."""
 
 import re
+import shutil
 
 import pytesseract
 import pytest
@@ -60,7 +61,27 @@ def assert_nothing_internal_leaks(response, upload_dir):
 def test_health(api):
     response = api.get(f"{API}/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": "0.1.0", "database": "ok"}
+    body = response.json()
+    assert {k: body[k] for k in ("status", "version", "database")} == {"status": "ok", "version": "0.1.0",
+                                                                       "database": "ok"}
+    assert body["ocr"] in ("available", "unavailable")
+
+
+def test_health_reports_missing_ocr_without_failing(api, monkeypatch):
+    def missing():
+        raise pytesseract.TesseractNotFoundError()
+
+    monkeypatch.setattr(pytesseract, "get_tesseract_version", missing)
+    response = api.get(f"{API}/health")
+
+    assert response.status_code == 200  # text PDFs still work, so the service stays healthy
+    assert (response.json()["ocr"], response.json()["ocr_engine"]) == ("unavailable", None)
+
+
+@pytest.mark.skipif(shutil.which("tesseract") is None, reason="Tesseract is not installed")
+def test_health_reports_available_ocr(api):
+    body = api.get(f"{API}/health").json()
+    assert body["ocr"] == "available" and body["ocr_engine"].startswith("tesseract ")
 
 
 def test_health_reports_database_outage(tmp_path):

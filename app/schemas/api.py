@@ -30,6 +30,8 @@ class HealthResponse(BaseModel):
     status: str
     version: str
     database: str
+    ocr: str = Field(description="'available' if scanned PDFs can be read, otherwise 'unavailable'")
+    ocr_engine: str | None = Field(default=None, description="e.g. 'tesseract 5.5.3'")
 
 
 class Links(BaseModel):

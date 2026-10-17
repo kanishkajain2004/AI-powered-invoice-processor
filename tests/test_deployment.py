@@ -159,7 +159,7 @@ def test_start_scripts_bind_render_port_and_serve(started, tmp_path):
     started("start_api.sh", PORT=str(api_port), HOST="127.0.0.1", DATA_DIR=str(data_dir),
             SEED_ON_STARTUP="true", DATABASE_URL="", UPLOAD_DIR="")
     health = _wait_for(f"http://127.0.0.1:{api_port}/api/v1/health").json()
-    assert health == {"status": "ok", "version": "0.1.0", "database": "ok"}
+    assert (health["status"], health["database"]) == ("ok", "ok")
     assert len(requests.get(f"http://127.0.0.1:{api_port}/api/v1/purchase-orders", timeout=5).json()) == 4
     assert (data_dir / "invoices.db").exists() and (data_dir / "uploads").is_dir()
 

@@ -1,6 +1,9 @@
 # Render Blueprint: two web services built from this repository.
 # Docs: https://render.com/docs/blueprint-spec
 #
+# The API is a Docker service (Dockerfile: Python 3.12 + Tesseract OCR); the UI is a plain
+# Python service, since it does no OCR.
+#
 # The UI calls the API from its server (not from the browser), so it needs the API's URL in
 # API_BASE_URL. Render asks for that value when the Blueprint is created, because it is
 # marked `sync: false`. Use the API's public URL, e.g. https://zamp-invoice-api.onrender.com.
@@ -11,12 +14,14 @@
 # block and set DATA_DIR to its mount path. Keep the API at a single instance (SQLite).
 
 services:
+  # The API runs from the Dockerfile so that Tesseract OCR is installed for scanned PDFs.
+  # The image's CMD is scripts/start_api.sh, which binds 0.0.0.0:$PORT.
   - type: web
     name: zamp-invoice-api
-    runtime: python
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: sh scripts/start_api.sh
     healthCheckPath: /api/v1/health
     envVars:
       - key: SEED_ON_STARTUP
@@ -25,6 +30,8 @@ services:
         value: INFO
       - key: MAX_UPLOAD_MB
         value: "20"
+      # - key: OCR_DPI             # lower it (e.g. 200) if the free instance runs out of memory
+      #   value: "300"
       # - key: DATA_DIR            # with the disk below (paid plans only)
       #   value: /var/data
     # disk:

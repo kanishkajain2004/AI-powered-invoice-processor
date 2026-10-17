@@ -1,0 +1,23 @@
+# Keep the image small and free of local data: only requirements.txt, app/ and scripts/
+# are copied by the Dockerfile, but the whole build context is sent to the builder.
+.git
+.venv
+venv
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.ruff_cache
+.env
+.env.*
+!.env.example
+
+data/*.db
+data/*.db-*
+data/uploads
+data/demo_uploads
+data/backups
+
+tests
+docs
+frontend
+.streamlit

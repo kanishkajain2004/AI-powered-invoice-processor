@@ -37,7 +37,7 @@ with st.sidebar:
         health = client.health()
         ui.show(f'{ui.pill(ui.Indicator("✓", "Backend connected", ui.GOOD))}'
                 f'<div class="subtle" style="margin-top:.4rem">API v{ui.esc(health["version"])} · database '
-                f'{ui.esc(health["database"])}</div>')
+                f'{ui.esc(health["database"])} · scanned PDFs (OCR): {ui.esc(health.get("ocr", "unknown"))}</div>')
     except BackendError as exc:
         ui.show(ui.pill(ui.Indicator("✕", "Backend unavailable", ui.CRITICAL)))
         st.caption(exc.message)
